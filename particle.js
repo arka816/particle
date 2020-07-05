@@ -1,9 +1,11 @@
-const particleCount = 80;
+const particleCount = 100;
 const edgeThreshold = 250;
 const edgeAlpha = 0.3;
 const particleColor = "#ffffff";
 const edgeColor = "#ffffff";
 const edgeThickness = 0.5;
+const colorArray = ["#0c7bc9", "#b61924", "#0c0140", "#8a0641", "#2f6103", "#068c7d", "#000000"];
+const gammaCorrection = 1.4;
 
 var canvas, g;
 const PI = Math.PI;
@@ -82,7 +84,8 @@ function Particle(x, y, vx, vy, radius){
     this.time = 0;
 
     this.edgeMetric = function(d){
-        return this.status == "normal" ? (1.0 - d / edgeThreshold) * edgeAlpha : 1;
+        //GAMMA CORRECTED METRIC
+        return this.status == "normal" ? Math.pow((1.0 - d / edgeThreshold), gammaCorrection) * edgeAlpha : 1;
     }
 
     this.drawEdge = function(end, strength){
@@ -176,6 +179,8 @@ var particleCanvas = {
         canvasBoundY = window.outerHeight;
         canvas.width = canvasBoundX;
         canvas.height = canvasBoundY;
+
+        canvas.style.backgroundColor = colorArray[Math.round(Math.random() * (colorArray.length - 1))];
     
         for(let i of Array(particleCount).keys()){
             var theta = Math.random() * 2 * PI;
