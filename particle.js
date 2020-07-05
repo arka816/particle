@@ -1,5 +1,6 @@
 const particleCount = 100;
 const edgeThreshold = 250;
+const driftThreshold = 200;
 const edgeAlpha = 0.3;
 const particleColor = "#ffffff";
 const edgeColor = "#ffffff";
@@ -16,6 +17,11 @@ var particleArray = new Array();
 var globalID;
 var mouseState = false;
 var animationState = false;
+
+const DRIFT_AWAY = 1;
+const FOCUS = 2;
+
+const PARTICLE_MODE = DRIFT_AWAY;
 
 var mouseParticle = new Particle(0, 0, 0, 0, 0);
 mouseParticle.status = "special";
@@ -75,6 +81,7 @@ Vector.distance = function(vec1, vec2){
 
 
 function Particle(x, y, vx, vy, radius){
+    this.mouseFlag = false;
     this.status = "normal"
     this.pos = new Vector(x, y);
     this.vel = new Vector(vx, vy);
@@ -99,7 +106,7 @@ function Particle(x, y, vx, vy, radius){
         g.stroke();
     }
 
-    this.update = function(dt){
+    this.update = function(dt, ...forcedParams){
         this.time += dt;
         if(this.pos.x < 0 || this.pos.x > canvasBoundX){
             this.vel.reflectY();
@@ -109,9 +116,22 @@ function Particle(x, y, vx, vy, radius){
             this.vel.reflectX();
             this.time = 0;
         }
+        if(PARTICLE_MODE == DRIFT_AWAY){
+            let pointerDist = Vector.distance(this.pos, mouseParticle.pos);
+            if(pointerDist < driftThreshold){
+                if(!this.mouseFlag){
+                    this.vel.reflectX();
+                    this.vel.reflectY();
+                }
+                this.mouseFlag = true;
+            }
+            else{
+                this.mouseFlag = false;
+            }
+        }
         this.pos.add(new Vector(this.speed * this.vel.x * dt, this.speed * this.vel.y * dt));
         particleArray.forEach((particle) => {
-            var dist = Vector.distance(particle.pos, this.pos);
+            let dist = Vector.distance(particle.pos, this.pos);
             if(dist < edgeThreshold){
                 this.drawEdge(particle, this.edgeMetric(dist));
                 if(dist < (this.radius + particle.radius) && this.status == "normal"){
@@ -126,6 +146,16 @@ function Particle(x, y, vx, vy, radius){
                 }
             }
         })
+    }
+
+    this.drift = function(dist){
+        let shift = new Vector(this.pos.x - mouseParticle.pos.x, this.pos.y - mouseParticle.pos.y);
+        shift.divide(dist);
+        shift.multiply(2000/dist);
+        let x = this.pos.x + shift.x;
+        let y = this.pos.y + shift.y;
+        this.pos.x = shift.x < 0 ? Math.max(2, x) : Math.min(canvasBoundX - 2, x);
+        this.pos.y = shift.y < 0 ? Math.max(2, y) : Math.min(canvasBoundX - 2, y);
     }
 
     this.draw = function(){
@@ -147,8 +177,10 @@ var particleCanvas = {
             particle.draw();
         });
         if(mouseState){
-            mouseParticle.update(refreshInterval / 1000);
-            mouseParticle.draw();
+            if(PARTICLE_MODE == FOCUS){
+                mouseParticle.update(refreshInterval / 1000);
+                mouseParticle.draw();
+            }
         }
         globalID = requestAnimationFrame(particleCanvas.animate);
         
@@ -173,8 +205,17 @@ var particleCanvas = {
         g = canvas.getContext('2d');
         canvas.addEventListener('mouseover', () => {mouseState = true});
         canvas.addEventListener('mouseout', () => {mouseState = false});
+
         canvas.addEventListener('mousemove', (e) => {
             mouseParticle.pos = new Vector(e.offsetX, e.offsetY);
+            if(PARTICLE_MODE === DRIFT_AWAY){
+                particleArray.forEach((particle) => {
+                    let dist = Vector.distance(particle.pos, mouseParticle.pos);
+                    if(dist < driftThreshold){
+                        particle.drift(dist);
+                    }
+                })
+            }
         });
     
         canvasBoundX = window.outerWidth;
