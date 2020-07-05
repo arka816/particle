@@ -192,4 +192,3 @@ var particleCanvas = {
         }
     }
 }
-
