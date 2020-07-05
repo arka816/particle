@@ -10,7 +10,8 @@ const gammaCorrection = 1.4;
 var canvas, g;
 const PI = Math.PI;
 var canvasBoundX, canvasBoundY;
-var refreshInterval = 1000/60;
+var forcedFPS = 25;
+var refreshInterval = 1000/forcedFPS;
 var particleArray = new Array();
 var globalID;
 var mouseState = false;
@@ -63,8 +64,8 @@ Vector.cross = function(vec1, vec2){
     return vec1.x * vec2.y - vec1.y * vec2.x;
 }
 Vector.sqrDistance = function(vec1, vec2){
-    var x = vec1.x - vec2.x;
-    var y = vec1.y - vec2.y;
+    let x = vec1.x - vec2.x;
+    let y = vec1.y - vec2.y;
     return (x * x + y * y);
 }
 Vector.distance = function(vec1, vec2){
@@ -150,6 +151,7 @@ var particleCanvas = {
             mouseParticle.draw();
         }
         globalID = requestAnimationFrame(particleCanvas.animate);
+        
     },
     start : function(){
         // START ANIMATION
@@ -183,11 +185,11 @@ var particleCanvas = {
         canvas.style.backgroundColor = colorArray[Math.round(Math.random() * (colorArray.length - 1))];
     
         for(let i of Array(particleCount).keys()){
-            var theta = Math.random() * 2 * PI;
-            var posX = Math.random() * canvasBoundX;
-            var posY = Math.random() * canvasBoundY;
-            var radius = 2 + Math.random() * 2;
-            var particle = new Particle(posX, posY, Math.cos(theta), Math.sin(theta), radius);
+            let theta = Math.random() * 2 * PI;
+            let posX = Math.random() * canvasBoundX;
+            let posY = Math.random() * canvasBoundY;
+            let radius = 2 + Math.random() * 2;
+            let particle = new Particle(posX, posY, Math.cos(theta), Math.sin(theta), radius);
             particleArray.push(particle);
         }
     }
