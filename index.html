@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <link rel="stylesheet" href="design.css">
+        <script src="particle.js"></script>
+    </head>
+    <body onload="particleCanvas.initiate()">
+        <canvas 
+            id="particleCanvas" 
+            width="1000" 
+            height="600"
+        >
+        </canvas>
+        <br />
+        <button onclick="particleCanvas.start()">START</button>
+        <button onclick="particleCanvas.stop()">STOP</button>
+    </body>
+</html>

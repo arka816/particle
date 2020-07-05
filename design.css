@@ -1,0 +1,28 @@
+body, html{
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    text-align: center;
+    background-color: black;
+}
+canvas{
+    position: relative;
+    top: 60px;
+    margin: 0 auto;
+    width: 1000px;
+    height: 600px;
+    background-color: #b61924;
+}
+button{
+    position: relative;
+    top: 100px;
+    margin: 0 10px;
+    border: white 2px solid;
+    outline: none;
+    user-select: none;
+    border-radius: 20px;
+    height: 40px;
+    width: 100px;
+    background-color: transparent;
+    color: white;
+}
