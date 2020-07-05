@@ -7,15 +7,16 @@ body, html{
 }
 canvas{
     position: relative;
-    top: 60px;
+    top: 0px;
     margin: 0 auto;
-    width: 1000px;
-    height: 600px;
+    width: 100vw;
+    height: 100vh;
     background-color: #b61924;
 }
 button{
+    z-index: 1000;
     position: relative;
-    top: 100px;
+    bottom: 60px;
     margin: 0 10px;
     border: white 2px solid;
     outline: none;

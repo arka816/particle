@@ -1,4 +1,4 @@
-const particleCount = 60;
+const particleCount = 80;
 const edgeThreshold = 250;
 const edgeAlpha = 0.3;
 const particleColor = "#ffffff";
@@ -172,8 +172,10 @@ var particleCanvas = {
             mouseParticle.pos = new Vector(e.offsetX, e.offsetY);
         });
     
-        canvasBoundX = canvas.width;
-        canvasBoundY = canvas.height;
+        canvasBoundX = window.outerWidth;
+        canvasBoundY = window.outerHeight;
+        canvas.width = canvasBoundX;
+        canvas.height = canvasBoundY;
     
         for(let i of Array(particleCount).keys()){
             var theta = Math.random() * 2 * PI;
