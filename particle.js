@@ -18,12 +18,15 @@ var globalID;
 var mouseState = false;
 var animationState = false;
 
+var lastMouseX, lastMouseY;
+
 // MODES
 const DRIFT_AWAY = 1;
-const FOCUS = 2;
-const BUBBLE = 3;
+const DRIFT_TO = 2;
+const FOCUS = 3;
+const BUBBLE = 4;
 
-const PARTICLE_MODE = DRIFT_AWAY;
+const PARTICLE_MODE = DRIFT_TO;
 
 var mouseParticle = new Particle(0, 0, 0, 0, 0);
 mouseParticle.status = "special";
@@ -93,6 +96,10 @@ function Particle(x, y, vx, vy, radius){
     this.mass = Math.pow(radius, 3);
     this.color = particleColor;
     this.time = 0;
+
+    this.alphaMetric = function(r){
+        return Math.pow(r/8, 0.7);
+    }
 
     this.edgeMetric = function(d){
         //GAMMA CORRECTED METRIC
@@ -178,9 +185,17 @@ function Particle(x, y, vx, vy, radius){
         this.pos.y = shift.y < 0 ? Math.max(2, y) : Math.min(canvasBoundY - 2, y);
     }
 
+    this.driftTo = function(dist, shift){
+        shift.multiply(20 / (1 + dist));
+        let x = this.pos.x + shift.x;
+        let y = this.pos.y + shift.y;
+        this.pos.x = shift.x < 0 ? Math.max(2, x) : Math.min(canvasBoundX - 2, x);
+        this.pos.y = shift.y < 0 ? Math.max(2, y) : Math.min(canvasBoundY - 2, y);
+    }
+
     this.draw = function(){
         // DRAW THE PARTICLE
-        g.globalAlpha = 1;
+        g.globalAlpha = this.alphaMetric(this.radius);
         g.fillStyle = this.color;
         g.beginPath();
         g.arc(this.pos.x, this.pos.y, this.radius * this.inflationFactor, 0, 2*PI);
@@ -226,6 +241,8 @@ var particleCanvas = {
 
 
         canvas.addEventListener('mousemove', (e) => {
+            lastMouseX = mouseParticle.pos.x;
+            lastMouseY = mouseParticle.pos.y;
             mouseParticle.pos = new Vector(e.offsetX, e.offsetY);
             //console.log(mouseParticle.pos);
             if(PARTICLE_MODE === DRIFT_AWAY){
@@ -233,6 +250,14 @@ var particleCanvas = {
                     let dist = Vector.distance(particle.pos, mouseParticle.pos);
                     if(dist < driftThreshold){
                         particle.driftAway(dist);
+                    }
+                })
+            }
+            else if(PARTICLE_MODE === DRIFT_TO){
+                particleArray.forEach((particle) => {
+                    let dist = Vector.distance(particle.pos, mouseParticle.pos);
+                    if(dist < driftThreshold){
+                        particle.driftTo(dist, new Vector(mouseParticle.pos.x - lastMouseX, mouseParticle.pos.y - lastMouseY));
                     }
                 })
             }
@@ -249,7 +274,7 @@ var particleCanvas = {
             let theta = Math.random() * 2 * PI;
             let posX = Math.random() * canvasBoundX;
             let posY = Math.random() * canvasBoundY;
-            let radius = 2 + Math.random() * 2;
+            let radius = 2 + Math.random() * 6;
             let particle = new Particle(posX, posY, Math.cos(theta), Math.sin(theta), radius);
             particleArray.push(particle);
         }
