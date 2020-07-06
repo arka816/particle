@@ -18,6 +18,7 @@ var globalID;
 var mouseState = false;
 var animationState = false;
 
+// MODES
 const DRIFT_AWAY = 1;
 const FOCUS = 2;
 const BUBBLE = 3;
