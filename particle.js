@@ -20,6 +20,7 @@ var animationState = false;
 
 const DRIFT_AWAY = 1;
 const FOCUS = 2;
+const BUBBLE = 3;
 
 const PARTICLE_MODE = DRIFT_AWAY;
 
@@ -87,6 +88,7 @@ function Particle(x, y, vx, vy, radius){
     this.vel = new Vector(vx, vy);
     this.speed = 30 + Math.random() * 30;
     this.radius = radius;
+    this.inflationFactor = 1;
     this.mass = Math.pow(radius, 3);
     this.color = particleColor;
     this.time = 0;
@@ -108,6 +110,8 @@ function Particle(x, y, vx, vy, radius){
 
     this.update = function(dt, ...forcedParams){
         this.time += dt;
+
+        // HANDLES REFLECTION OFF WALLS
         if(this.pos.x < 0 || this.pos.x > canvasBoundX){
             this.vel.reflectY();
             this.time = 0;
@@ -116,6 +120,8 @@ function Particle(x, y, vx, vy, radius){
             this.vel.reflectX();
             this.time = 0;
         }
+
+        // HANDLES DRIFTING AWAY OF PARTICLES
         if(PARTICLE_MODE == DRIFT_AWAY){
             let pointerDist = Vector.distance(this.pos, mouseParticle.pos);
             if(pointerDist < driftThreshold){
@@ -129,6 +135,19 @@ function Particle(x, y, vx, vy, radius){
                 this.mouseFlag = false;
             }
         }
+
+        // HANDLES INFLATION OF PARTICLES
+        if(PARTICLE_MODE == BUBBLE){
+            if(mouseState){
+                let dist = Vector.distance(mouseParticle.pos, this.pos);
+                this.inflationFactor = 600 / (20 + dist);
+            }
+            else{
+                this.inflationFactor = 1;
+            }
+        }
+
+        // RENDERS THE EDGES
         this.pos.add(new Vector(this.speed * this.vel.x * dt, this.speed * this.vel.y * dt));
         particleArray.forEach((particle) => {
             let dist = Vector.distance(particle.pos, this.pos);
@@ -148,14 +167,14 @@ function Particle(x, y, vx, vy, radius){
         })
     }
 
-    this.drift = function(dist){
+    this.driftAway = function(dist){
         let shift = new Vector(this.pos.x - mouseParticle.pos.x, this.pos.y - mouseParticle.pos.y);
         shift.divide(dist);
-        shift.multiply(2000/dist);
+        shift.multiply(8000 / (25 + dist));
         let x = this.pos.x + shift.x;
         let y = this.pos.y + shift.y;
         this.pos.x = shift.x < 0 ? Math.max(2, x) : Math.min(canvasBoundX - 2, x);
-        this.pos.y = shift.y < 0 ? Math.max(2, y) : Math.min(canvasBoundX - 2, y);
+        this.pos.y = shift.y < 0 ? Math.max(2, y) : Math.min(canvasBoundY - 2, y);
     }
 
     this.draw = function(){
@@ -163,7 +182,7 @@ function Particle(x, y, vx, vy, radius){
         g.globalAlpha = 1;
         g.fillStyle = this.color;
         g.beginPath();
-        g.arc(this.pos.x, this.pos.y, this.radius, 0, 2*PI);
+        g.arc(this.pos.x, this.pos.y, this.radius * this.inflationFactor, 0, 2*PI);
         g.fill();
     }
 }
@@ -176,11 +195,9 @@ var particleCanvas = {
             particle.update(refreshInterval / 1000);
             particle.draw();
         });
-        if(mouseState){
-            if(PARTICLE_MODE == FOCUS){
-                mouseParticle.update(refreshInterval / 1000);
-                mouseParticle.draw();
-            }
+        if(mouseState && PARTICLE_MODE == FOCUS){
+            mouseParticle.update(refreshInterval / 1000);
+            mouseParticle.draw();
         }
         globalID = requestAnimationFrame(particleCanvas.animate);
         
@@ -204,24 +221,26 @@ var particleCanvas = {
         canvas = document.getElementById('particleCanvas');
         g = canvas.getContext('2d');
         canvas.addEventListener('mouseover', () => {mouseState = true});
-        canvas.addEventListener('mouseout', () => {mouseState = false});
+        canvas.addEventListener('mouseout', () => {mouseState = false;});
+
 
         canvas.addEventListener('mousemove', (e) => {
             mouseParticle.pos = new Vector(e.offsetX, e.offsetY);
+            //console.log(mouseParticle.pos);
             if(PARTICLE_MODE === DRIFT_AWAY){
                 particleArray.forEach((particle) => {
                     let dist = Vector.distance(particle.pos, mouseParticle.pos);
                     if(dist < driftThreshold){
-                        particle.drift(dist);
+                        particle.driftAway(dist);
                     }
                 })
             }
         });
     
-        canvasBoundX = window.outerWidth;
-        canvasBoundY = window.outerHeight;
-        canvas.width = canvasBoundX;
+        canvasBoundY = window.innerHeight;
         canvas.height = canvasBoundY;
+        canvas.width = canvas.height * (canvas.clientWidth / canvas.clientHeight);
+        canvasBoundX = canvas.width;
 
         canvas.style.backgroundColor = colorArray[Math.round(Math.random() * (colorArray.length - 1))];
     
